@@ -1,7 +1,9 @@
 package com.example.bankcards.service;
 
+import com.example.bankcards.dto.TransferRequestDto;
 import com.example.bankcards.entity.*;
 import com.example.bankcards.repository.CardRepository;
+import com.example.bankcards.repository.TransactionRepository;
 import com.example.bankcards.repository.UserRepository;
 import com.example.bankcards.dto.CardResponseDto;
 import com.example.bankcards.util.CryptoUtil;
@@ -22,6 +24,7 @@ public class CardServiceImpl implements CardService {
 
     private final CardRepository cardRepository;
     private final UserRepository userRepository;
+    private final TransactionRepository transactionRepository;
 
     // ============================
     // 🔵 ADMIN
@@ -119,6 +122,49 @@ public class CardServiceImpl implements CardService {
         updateExpiredStatus(card);
 
         return card.getBalance();
+    }
+
+    @Override
+    @Transactional
+    public void transfer(String username, TransferRequestDto request) {
+
+        if (request.getFromCardId().equals(request.getToCardId())) {
+            throw new RuntimeException("Cannot transfer to the same card");
+        }
+
+        Card fromCard = cardRepository.findWithLockById(request.getFromCardId())
+                .orElseThrow(() -> new RuntimeException("From card not found"));
+
+        Card toCard = cardRepository.findWithLockById(request.getToCardId())
+                .orElseThrow(() -> new RuntimeException("To card not found"));
+
+        if (!fromCard.getOwner().getUsername().equals(username) ||
+                !toCard.getOwner().getUsername().equals(username)) {
+            throw new RuntimeException("Access denied");
+        }
+
+        updateExpiredStatus(fromCard);
+        updateExpiredStatus(toCard);
+
+        if (fromCard.getStatus() != CardStatus.ACTIVE ||
+                toCard.getStatus() != CardStatus.ACTIVE) {
+            throw new RuntimeException("Both cards must be ACTIVE");
+        }
+
+        if (fromCard.getBalance().compareTo(request.getAmount()) < 0) {
+            throw new RuntimeException("Insufficient funds");
+        }
+
+        fromCard.setBalance(fromCard.getBalance().subtract(request.getAmount()));
+        toCard.setBalance(toCard.getBalance().add(request.getAmount()));
+
+        Transaction transaction = Transaction.builder()
+                .fromCard(fromCard)
+                .toCard(toCard)
+                .amount(request.getAmount())
+                .build();
+
+        transactionRepository.save(transaction);
     }
 
     // ============================

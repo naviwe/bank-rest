@@ -1,7 +1,9 @@
 package com.example.bankcards.controller;
 
 import com.example.bankcards.dto.CardResponseDto;
+import com.example.bankcards.dto.TransferRequestDto;
 import com.example.bankcards.service.CardService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -84,5 +86,14 @@ public class CardController {
             Authentication authentication
     ) {
         return cardService.getBalance(cardId, authentication.getName());
+    }
+
+    @PostMapping("/transfer")
+    @PreAuthorize("hasRole('USER')")
+    public void transfer(
+            @Valid @RequestBody TransferRequestDto request,
+            Authentication authentication
+    ) {
+        cardService.transfer(authentication.getName(), request);
     }
 }
