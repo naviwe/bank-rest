@@ -1,10 +1,11 @@
 package com.example.bankcards.dto;
 
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
 @Getter
-@Builder
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class CardResponseDto {
 
     private Long id;

@@ -2,6 +2,7 @@ package com.example.bankcards.service;
 
 import com.example.bankcards.dto.UpdateRoleRequestDto;
 import com.example.bankcards.dto.UserResponseDto;
+import com.example.bankcards.dto.mappers.UserMapper;
 import com.example.bankcards.entity.Role;
 import com.example.bankcards.entity.User;
 import com.example.bankcards.repository.UserRepository;
@@ -17,19 +18,20 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     @Override
     @Transactional(readOnly = true)
     public Page<UserResponseDto> getAllUsers(Pageable pageable) {
         return userRepository.findAll(pageable)
-                .map(this::mapToDto);
+                .map(userMapper::toDto);
     }
 
     @Override
     @Transactional(readOnly = true)
     public UserResponseDto getUserById(Long id) {
         User user = getUserOrThrow(id);
-        return mapToDto(user);
+        return userMapper.toDto(user);
     }
 
     @Override
@@ -50,21 +52,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(Long id) {
         User user = getUserOrThrow(id);
-
+        if (user.getRole().equals(Role.ADMIN)) {
+            throw new RuntimeException("Invalid role");
+        }
         userRepository.delete(user);
     }
 
     private User getUserOrThrow(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-    }
-
-    private UserResponseDto mapToDto(User user) {
-        return UserResponseDto.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .role(user.getRole().name())
-                .createdAt(user.getCreatedAt())
-                .build();
     }
 }
