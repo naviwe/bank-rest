@@ -6,20 +6,19 @@ spring:
     url: jdbc:postgresql://localhost:5433/card_management
     username: postgres
     password: postgres
-    driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
       ddl-auto: validate
     show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
 
   liquibase:
     change-log: classpath:db/migration/db.changelog-master.yaml
-    enabled: true
 
-logging:
-  level:
-    org.hibernate.SQL: DEBUG
+jwt:
+  secret: CejzoEx6o+/eipovtB+oQMbcCi0eDAobJ54k7/xN/hY=
+  ttl: 10h
+
+crypto:
+  aes:
+    key: W8kqbtv9Zt+XTeBoiDKqWAY8oVv5zwPyTismIoD5gL8=

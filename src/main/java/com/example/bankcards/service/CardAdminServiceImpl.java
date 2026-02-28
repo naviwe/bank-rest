@@ -30,6 +30,7 @@ public class CardAdminServiceImpl implements CardAdminService {
     private final UserRepository userRepository;
     private final CardMapper cardMapper;
     private final CardNumberGenerator cardNumberGenerator;
+    private final CryptoUtil cryptoUtil;
 
     @Override
     public CardResponseDto createCard(Long userId) {
@@ -38,7 +39,7 @@ public class CardAdminServiceImpl implements CardAdminService {
 
         String rawCardNumber = cardNumberGenerator.generate();
 
-        String encryptedNumber = CryptoUtil.encrypt(rawCardNumber);
+        String encryptedNumber = cryptoUtil.encrypt(rawCardNumber);
 
         Card card = Card.builder()
                 .encryptedNumber(encryptedNumber)
@@ -88,7 +89,7 @@ public class CardAdminServiceImpl implements CardAdminService {
 
                     CardResponseDto dto = cardMapper.toDto(card);
 
-                    String decryptedNumber = CryptoUtil.decrypt(card.getEncryptedNumber());
+                    String decryptedNumber = cryptoUtil.decrypt(card.getEncryptedNumber());
                     dto.setMaskedNumber(maskNumber(decryptedNumber));
 
                     return dto;

@@ -29,6 +29,7 @@ public class CardUserServiceImpl implements CardUserService {
     private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
     private final CardMapper cardMapper;
+    private final CryptoUtil cryptoUtil;
 
     @Override
     @Transactional(readOnly = true)
@@ -42,7 +43,7 @@ public class CardUserServiceImpl implements CardUserService {
 
                     CardResponseDto dto = cardMapper.toDto(card);
 
-                    String decryptedNumber = CryptoUtil.decrypt(card.getEncryptedNumber());
+                    String decryptedNumber = cryptoUtil.decrypt(card.getEncryptedNumber());
                     dto.setMaskedNumber(maskNumber(decryptedNumber));
 
                     return dto;
