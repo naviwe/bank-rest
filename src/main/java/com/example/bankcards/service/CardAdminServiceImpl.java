@@ -5,6 +5,9 @@ import com.example.bankcards.dto.mappers.CardMapper;
 import com.example.bankcards.entity.Card;
 import com.example.bankcards.entity.CardStatus;
 import com.example.bankcards.entity.User;
+import com.example.bankcards.exception.CardExpiredException;
+import com.example.bankcards.exception.CardNotFoundException;
+import com.example.bankcards.exception.UserNotFoundException;
 import com.example.bankcards.repository.CardRepository;
 import com.example.bankcards.repository.UserRepository;
 import com.example.bankcards.util.CardNumberGenerator;
@@ -31,7 +34,7 @@ public class CardAdminServiceImpl implements CardAdminService {
     @Override
     public CardResponseDto createCard(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         String rawCardNumber = cardNumberGenerator.generate();
 
@@ -65,7 +68,7 @@ public class CardAdminServiceImpl implements CardAdminService {
         Card card = getCardOrThrow(cardId);
 
         if (card.getExpirationDate().isBefore(LocalDate.now())) {
-            throw new RuntimeException("Card is expired");
+            throw new CardExpiredException("Card is expired");
         }
 
         card.setStatus(CardStatus.ACTIVE);
@@ -92,13 +95,6 @@ public class CardAdminServiceImpl implements CardAdminService {
                 });
     }
 
-    private void updateExpiredStatus(Card card) {
-        if (card.getExpirationDate().isBefore(LocalDate.now())
-                && card.getStatus() != CardStatus.EXPIRED) {
-            card.setStatus(CardStatus.EXPIRED);
-        }
-    }
-
     private String maskNumber(String rawNumber) {
         if (rawNumber == null || rawNumber.length() < 4) return "****";
         return "**** **** **** " + rawNumber.substring(rawNumber.length() - 4);
@@ -106,6 +102,6 @@ public class CardAdminServiceImpl implements CardAdminService {
 
     private Card getCardOrThrow(Long cardId) {
         return cardRepository.findById(cardId)
-                .orElseThrow(() -> new RuntimeException("Card not found"));
+                .orElseThrow(() -> new CardNotFoundException("Card not found"));
     }
 }

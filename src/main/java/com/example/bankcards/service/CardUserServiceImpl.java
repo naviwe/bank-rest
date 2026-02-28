@@ -3,6 +3,10 @@ package com.example.bankcards.service;
 import com.example.bankcards.dto.TransferRequestDto;
 import com.example.bankcards.dto.mappers.CardMapper;
 import com.example.bankcards.entity.*;
+import com.example.bankcards.exception.AccessDeniedException;
+import com.example.bankcards.exception.CardNotFoundException;
+import com.example.bankcards.exception.InvalidRequestException;
+import com.example.bankcards.exception.UserNotFoundException;
 import com.example.bankcards.repository.CardRepository;
 import com.example.bankcards.repository.TransactionRepository;
 import com.example.bankcards.repository.UserRepository;
@@ -30,7 +34,7 @@ public class CardUserServiceImpl implements CardUserService {
     @Transactional(readOnly = true)
     public Page<CardResponseDto> getMyCards(String username, Pageable pageable) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         return cardRepository.findByOwner(user, pageable)
                 .map(card -> {
@@ -51,7 +55,7 @@ public class CardUserServiceImpl implements CardUserService {
         Card card = getCardOrThrow(cardId);
 
         if (!card.getOwner().getUsername().equals(username)) {
-            throw new RuntimeException("Access denied");
+            throw new AccessDeniedException("Access denied");
         }
 
         card.setStatus(CardStatus.BLOCKED);
@@ -64,7 +68,7 @@ public class CardUserServiceImpl implements CardUserService {
         Card card = getCardOrThrow(cardId);
 
         if (!card.getOwner().getUsername().equals(username)) {
-            throw new RuntimeException("Access denied");
+            throw new AccessDeniedException("Access denied");
         }
 
         updateExpiredStatus(card);
@@ -81,14 +85,14 @@ public class CardUserServiceImpl implements CardUserService {
         }
 
         Card fromCard = cardRepository.findWithLockById(request.getFromCardId())
-                .orElseThrow(() -> new RuntimeException("From card not found"));
+                .orElseThrow(() -> new CardNotFoundException("From card not found"));
 
         Card toCard = cardRepository.findWithLockById(request.getToCardId())
-                .orElseThrow(() -> new RuntimeException("To card not found"));
+                .orElseThrow(() -> new CardNotFoundException("To card not found"));
 
         if (!fromCard.getOwner().getUsername().equals(username) ||
                 !toCard.getOwner().getUsername().equals(username)) {
-            throw new RuntimeException("Access denied");
+            throw new AccessDeniedException("Access denied");
         }
 
         updateExpiredStatus(fromCard);
@@ -96,11 +100,11 @@ public class CardUserServiceImpl implements CardUserService {
 
         if (fromCard.getStatus() != CardStatus.ACTIVE ||
                 toCard.getStatus() != CardStatus.ACTIVE) {
-            throw new RuntimeException("Both cards must be ACTIVE");
+            throw new InvalidRequestException("Both cards must be ACTIVE");
         }
 
         if (fromCard.getBalance().compareTo(request.getAmount()) < 0) {
-            throw new RuntimeException("Insufficient funds");
+            throw new InvalidRequestException("Insufficient funds");
         }
 
         fromCard.setBalance(fromCard.getBalance().subtract(request.getAmount()));
@@ -117,7 +121,7 @@ public class CardUserServiceImpl implements CardUserService {
 
     private Card getCardOrThrow(Long cardId) {
         return cardRepository.findById(cardId)
-                .orElseThrow(() -> new RuntimeException("Card not found"));
+                .orElseThrow(() -> new CardNotFoundException("Card not found"));
     }
 
     private void updateExpiredStatus(Card card) {

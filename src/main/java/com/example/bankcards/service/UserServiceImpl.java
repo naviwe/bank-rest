@@ -5,6 +5,8 @@ import com.example.bankcards.dto.UserResponseDto;
 import com.example.bankcards.dto.mappers.UserMapper;
 import com.example.bankcards.entity.Role;
 import com.example.bankcards.entity.User;
+import com.example.bankcards.exception.AccessDeniedException;
+import com.example.bankcards.exception.UserNotFoundException;
 import com.example.bankcards.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -43,7 +45,7 @@ public class UserServiceImpl implements UserService {
         try {
             newRole = Role.valueOf(request.getRole().toString().toUpperCase());
         } catch (Exception e) {
-            throw new RuntimeException("Invalid role");
+            throw new AccessDeniedException("Invalid role");
         }
 
         user.setRole(newRole);
@@ -53,13 +55,13 @@ public class UserServiceImpl implements UserService {
     public void deleteUser(Long id) {
         User user = getUserOrThrow(id);
         if (user.getRole().equals(Role.ADMIN)) {
-            throw new RuntimeException("Invalid role");
+            throw new AccessDeniedException("Invalid role");
         }
         userRepository.delete(user);
     }
 
     private User getUserOrThrow(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
     }
 }
