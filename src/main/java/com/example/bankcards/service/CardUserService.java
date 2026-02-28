@@ -7,16 +7,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 
-public interface CardService {
-
-    // ADMIN
-    CardResponseDto createCard(Long userId);
-    void blockCard(Long cardId);
-    void activateCard(Long cardId);
-    void deleteCard(Long cardId);
-    Page<CardResponseDto> getAllCards(Pageable pageable);
-
-    // USER
+public interface CardUserService {
     Page<CardResponseDto> getMyCards(String username, Pageable pageable);
     void requestBlock(Long cardId, String username);
     BigDecimal getBalance(Long cardId, String username);

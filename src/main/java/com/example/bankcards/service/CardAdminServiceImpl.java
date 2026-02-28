@@ -92,6 +92,13 @@ public class CardAdminServiceImpl implements CardAdminService {
                 });
     }
 
+    private void updateExpiredStatus(Card card) {
+        if (card.getExpirationDate().isBefore(LocalDate.now())
+                && card.getStatus() != CardStatus.EXPIRED) {
+            card.setStatus(CardStatus.EXPIRED);
+        }
+    }
+
     private String maskNumber(String rawNumber) {
         if (rawNumber == null || rawNumber.length() < 4) return "****";
         return "**** **** **** " + rawNumber.substring(rawNumber.length() - 4);
