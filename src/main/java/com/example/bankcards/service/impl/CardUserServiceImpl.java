@@ -1,4 +1,4 @@
-package com.example.bankcards.service;
+package com.example.bankcards.service.impl;
 
 import com.example.bankcards.dto.TransferRequestDto;
 import com.example.bankcards.dto.mappers.CardMapper;
@@ -11,6 +11,7 @@ import com.example.bankcards.repository.CardRepository;
 import com.example.bankcards.repository.TransactionRepository;
 import com.example.bankcards.repository.UserRepository;
 import com.example.bankcards.dto.CardResponseDto;
+import com.example.bankcards.service.CardUserService;
 import com.example.bankcards.util.CryptoUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -39,7 +40,6 @@ public class CardUserServiceImpl implements CardUserService {
 
         return cardRepository.findByOwner(user, pageable)
                 .map(card -> {
-                    updateExpiredStatus(card);
 
                     CardResponseDto dto = cardMapper.toDto(card);
 
@@ -68,11 +68,9 @@ public class CardUserServiceImpl implements CardUserService {
 
         Card card = getCardOrThrow(cardId);
 
-        if (!card.getOwner().getUsername().equals(username)) {
+        if (!card.getOwner().getUsername().equals(username) || card.getStatus() == CardStatus.BLOCKED) {
             throw new AccessDeniedException("Access denied");
         }
-
-        updateExpiredStatus(card);
 
         return card.getBalance();
     }
@@ -95,9 +93,6 @@ public class CardUserServiceImpl implements CardUserService {
                 !toCard.getOwner().getUsername().equals(username)) {
             throw new AccessDeniedException("Access denied");
         }
-
-        updateExpiredStatus(fromCard);
-        updateExpiredStatus(toCard);
 
         if (fromCard.getStatus() != CardStatus.ACTIVE ||
                 toCard.getStatus() != CardStatus.ACTIVE) {
@@ -123,13 +118,6 @@ public class CardUserServiceImpl implements CardUserService {
     private Card getCardOrThrow(Long cardId) {
         return cardRepository.findById(cardId)
                 .orElseThrow(() -> new CardNotFoundException("Card not found"));
-    }
-
-    private void updateExpiredStatus(Card card) {
-        if (card.getExpirationDate().isBefore(LocalDate.now())
-                && card.getStatus() != CardStatus.EXPIRED) {
-            card.setStatus(CardStatus.EXPIRED);
-        }
     }
 
     private String maskNumber(String rawNumber) {

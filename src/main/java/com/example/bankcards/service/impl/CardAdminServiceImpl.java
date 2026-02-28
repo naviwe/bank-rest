@@ -1,4 +1,4 @@
-package com.example.bankcards.service;
+package com.example.bankcards.service.impl;
 
 import com.example.bankcards.dto.CardResponseDto;
 import com.example.bankcards.dto.mappers.CardMapper;
@@ -10,6 +10,7 @@ import com.example.bankcards.exception.CardNotFoundException;
 import com.example.bankcards.exception.UserNotFoundException;
 import com.example.bankcards.repository.CardRepository;
 import com.example.bankcards.repository.UserRepository;
+import com.example.bankcards.service.CardAdminService;
 import com.example.bankcards.util.CardNumberGenerator;
 import com.example.bankcards.util.CryptoUtil;
 import lombok.RequiredArgsConstructor;

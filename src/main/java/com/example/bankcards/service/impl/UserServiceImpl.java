@@ -1,4 +1,4 @@
-package com.example.bankcards.service;
+package com.example.bankcards.service.impl;
 
 import com.example.bankcards.dto.UpdateRoleRequestDto;
 import com.example.bankcards.dto.UserResponseDto;
@@ -8,6 +8,7 @@ import com.example.bankcards.entity.User;
 import com.example.bankcards.exception.AccessDeniedException;
 import com.example.bankcards.exception.UserNotFoundException;
 import com.example.bankcards.repository.UserRepository;
+import com.example.bankcards.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -41,21 +42,18 @@ public class UserServiceImpl implements UserService {
 
         User user = getUserOrThrow(id);
 
-        Role newRole;
         try {
-            newRole = Role.valueOf(request.getRole().toString().toUpperCase());
+            user.setRole(request.getRole());
         } catch (Exception e) {
             throw new AccessDeniedException("Invalid role");
         }
-
-        user.setRole(newRole);
     }
 
     @Override
     public void deleteUser(Long id) {
         User user = getUserOrThrow(id);
         if (user.getRole().equals(Role.ADMIN)) {
-            throw new AccessDeniedException("Invalid role");
+            throw new AccessDeniedException("Can't delete admin");
         }
         userRepository.delete(user);
     }
