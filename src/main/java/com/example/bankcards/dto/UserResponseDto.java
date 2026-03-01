@@ -1,12 +1,13 @@
 package com.example.bankcards.dto;
 
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Getter
-@Builder
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserResponseDto {
 
     private Long id;
